@@ -10,7 +10,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.compito.taskmanager.entity.Board;
+import ru.compito.taskmanager.entity.Member;
+import ru.compito.taskmanager.entity.Task;
 import ru.compito.taskmanager.entity.User;
+import ru.compito.taskmanager.repository.BoardRepository;
+import ru.compito.taskmanager.repository.MemberRepository;
+import ru.compito.taskmanager.repository.TaskRepository;
 import ru.compito.taskmanager.repository.UserRepository;
 import ru.compito.taskmanager.service.UserService;
 
@@ -24,6 +30,12 @@ public class UserServiceImpl implements UserService,UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private TaskRepository taskRepository;
+    @Autowired
+    private BoardRepository boardRepository;
+    @Autowired
+    private MemberRepository memberRepository;
 
     @Bean
     public PasswordEncoder passwordEncoder(){
@@ -39,8 +51,26 @@ public class UserServiceImpl implements UserService,UserDetailsService {
 
     @Override
     public List<User> findByTaskId(Integer taskId) {
-        return userRepository.findByTaskId(taskId);
+        Task task = taskRepository.getOne(taskId);
+        return userRepository.findAllByTasks(task);
     }
+
+    @Override
+    public List<Board> getBoardsByUserId(Integer userId) {
+        User user = userRepository.getOne(userId);
+        List<Member> members = memberRepository.findAllByUser(user);
+        List<Board> boardList = new ArrayList<>();
+        for(Member member : members)
+            boardList.add(member.getBoard());
+        return boardList;
+    }
+
+    @Override
+    public Board getBoardByUserId(Integer userId, Integer boardId) {
+        User user = userRepository.getOne(userId);
+        return boardRepository.findByBoardOwnerAndId(user,boardId);
+    }
+
     @Override
     public User getUserById(Integer Id) {
         return userRepository.findOne(Id);
@@ -52,10 +82,9 @@ public class UserServiceImpl implements UserService,UserDetailsService {
     }
 
     @Override
-    public void saveUser(User user) {
+    public User saveUser(User user) {
         user.setPassword(passwordEncoder().encode(user.getPassword()));
-        userRepository.save(user);
-
+        return userRepository.save(user);
     }
 
     @Override
@@ -64,8 +93,11 @@ public class UserServiceImpl implements UserService,UserDetailsService {
     }
 
     @Override
-    public void updateUser(User user) {
-        userRepository.save(user);
+    public User updateUserById(Integer userId, User user) {
+        User oldUser = userRepository.getOne(userId);
+        oldUser.setFullname(user.getFullname());
+        oldUser.setEmail(user.getEmail());
+        return userRepository.save(oldUser);
     }
 
     @Override

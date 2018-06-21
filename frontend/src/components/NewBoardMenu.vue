@@ -1,17 +1,15 @@
 <template>
     <div class="newBoardMenu">
-       <div class="menu__wrapper" @click="closeMenu"></div>
-        <div class="menu__body">
-            <div class="newBoardMenu__title">Создать новую доску</div>
-            <label for="" class="newBoardMenu__label">
-                <div class="newBoardMenu__text">Введите имя для доски:</div>
-                <input type="text" v-model="newBoard.boardName">
+       <div class="popup__wrapper" @click="closeMenu"></div>
+        <div class="popup__body">
+            <div class="popup__title">Создать новую доску</div>
+            <label for="" class="popup__label">
+                <input type="text" class="popup__input" v-model="newBoard.boardName" placeholder="Название новой доски">
             </label>
-            <label for="" class="newBoardMenu__label">
-                <div class="newBoardMenu__text">Введите описание доски:</div>
-                <input type="text" v-model="newBoard.description">
+            <label for="" class="popup__label">
+                <input type="text" class="popup__input" v-model="newBoard.description" placeholder="Описание доски">
             </label>
-            <button class="newBoardMenu__submit" @click.prevent="createNewBoard">Создать доску</button>
+            <button class="popup__submit" @click.prevent="createNewBoard">Создать доску</button>
         </div>
     </div>
 </template>
@@ -36,29 +34,18 @@ export default{
             var self = this;
             axios({
                 method: 'post',
-                url: 'http://localhost:8080/api/users/'+self.currentUser.id+'/boards',
+                url: host+'/api/users/'+self.currentUser.id+'/boards/?access_token='+getCookie("access_token"),
                 data:self.newBoard
             }).then(function (response) {
+                self.$root.$emit('onBoardSelect', response.data);
                 self.$emit('wrapperClick');
-                document.location.replace("/board");
+                self.$root.$emit('updateBoard');
+                window.location = "#/board";
             }).catch(function (error) {
-                alert("Error! "+ error)
+                self.$root.$emit('showDialog',error.response.data.error+"; "+error.response.data.message,'showError');
             });
 
         }
     }
 }
 </script>
-
-<style lang="scss" scoped>
-    .newBoardMenu__title{
-        font-weight: bold;
-        font-size: 18px;
-        margin-bottom: 10px;
-    }
-    .newBoardMenu__submit{
-        display: block;
-        margin: 10px auto;
-    }
-
-</style>

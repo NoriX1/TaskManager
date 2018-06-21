@@ -1,14 +1,19 @@
 package ru.compito.taskmanager.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name="tasks")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "task_id")
     private Integer id;
 
     @Column(name="task_name")
@@ -18,10 +23,23 @@ public class Task {
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "author")
     private User author;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "current_status")
+    private TaskStatus currentStatus;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "board")
+    private Board board;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tasktemplate")
+    private TaskTemplate taskTemplate;
+
+    @JsonIgnore
+    @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "users_tasks",
             joinColumns = {@JoinColumn(name = "task_id")},
             inverseJoinColumns = {@JoinColumn(name = "user_id")})
@@ -72,5 +90,46 @@ public class Task {
 
     public void setUsers(List<User> users) {
         this.users = users;
+    }
+
+    public Board getBoard() {
+        return board;
+    }
+
+    public void setBoard(Board board) {
+        this.board = board;
+    }
+
+    public TaskStatus getCurrentStatus() {
+        return currentStatus;
+    }
+
+    public void setCurrentStatus(TaskStatus currentStatus) {
+        this.currentStatus = currentStatus;
+    }
+
+    public TaskTemplate getTaskTemplate() {
+        return taskTemplate;
+    }
+
+    public void setTaskTemplate(TaskTemplate taskTemplate) {
+        this.taskTemplate = taskTemplate;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Task that = (Task) o;
+        return getId() == that.getId();
+    }
+
+    @Override
+    public int hashCode() {
+        return Long.valueOf(getId()).hashCode();
     }
 }

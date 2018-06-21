@@ -4,21 +4,20 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
-import ru.compito.taskmanager.entity.Task;
+import ru.compito.taskmanager.entity.*;
 
 import java.util.List;
 
 @Transactional(readOnly = true)
 public interface TaskRepository extends JpaRepository<Task, Integer> {
 
-    @Query("SELECT u.tasks FROM User u WHERE u.id=:userId")
-    List<Task> findByUserId(@Param("userId") Integer userId);
-
-    @Query("SELECT u.createdTasks FROM User u WHERE u.username=:username")
-    List<Task> findByUsername(String username);
-
-    @Query("SELECT (COUNT (t) > 0) AS boolean FROM User u " +
-            "INNER JOIN u.tasks t WHERE t.id =:id AND u.id=:userId ")
-    Boolean isTaskContainingInUser(@Param("id") Integer id, @Param("userId") Integer userId);
+    List<Task> findAllByBoard(Board board);
+    List<Task> findByBoardAndId(Board board,Integer taskId);
+    Task findByUsersAndId(User user, Integer taskId);
+    List<Task> findAllByTaskTemplate(TaskTemplate taskTemplate);
+    List<Task> findAllByCurrentStatus(TaskStatus taskStatus);
+    Task findByTaskTemplateAndId(TaskTemplate taskTemplate, Integer taskId);
+    Task findByTaskTemplate(TaskTemplate taskTemplate);
+    void deleteAllByBoard(Board board);
 
 }
